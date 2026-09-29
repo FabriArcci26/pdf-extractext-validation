@@ -2,7 +2,7 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from pydantic import BaseModel
 from shared.domain.filename import has_pdf_extension
 from shared.domain.pdf_validator import PdfValidator
@@ -48,14 +48,20 @@ async def validate_pdf(
     validator: Annotated[PdfValidator, Depends(get_validator)],
 ) -> ValidationResponse:
     if not has_pdf_extension(file.filename):
-        return ValidationResponse(valid=False, error="El archivo debe tener extensión .pdf")
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail="El archivo debe tener extensión .pdf",
+        )
 
     content = await _read_limited(file, validator.max_size_bytes)
     if content is None:
-        return ValidationResponse(
-            valid=False,
-            error=f"El archivo excede el tamaño máximo de {validator.max_size_bytes} bytes",
+        raise HTTPException(
+            status_code=status.HTTP_413_CONTENT_TOO_LARGE,
+            detail=f"El archivo excede el tamaño máximo de {validator.max_size_bytes} bytes",
         )
 
     result = validator.validate(content)
-    return ValidationResponse(valid=result.is_valid, error=result.error)
+    if not result.is_valid:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=result.error)
+
+    return ValidationResponse(valid=True, error=None)
