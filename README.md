@@ -22,15 +22,6 @@ pinneado por tag (`v1.3.0`) en `requirements.txt`.
 | GET    | `/health`   | Healthcheck del servicio. Responde `200`. |
 | POST   | `/validate` | Recibe `multipart/form-data` con el campo `file`. |
 
-`POST /validate` responde según el contrato REST:
-
-| Situación | Status | Body |
-| --------- | ------ | ---- |
-| PDF válido | `200` | `{"valid": true, "error": null}` |
-| Extensión distinta de `.pdf` | `415` | `{"detail": "..."}` |
-| Sin magic number `%PDF-` / vacío / inválido | `400` | `{"detail": "..."}` |
-| Excede `MAX_PDF_SIZE_BYTES` | `413` | `{"detail": "..."}` |
-
 ### Ejemplo
 
 ```bash
@@ -39,6 +30,20 @@ curl -i -F "file=@documento.pdf" http://localhost:8000/validate
 
 Cada respuesta incluye el header `X-Request-Id` (el provisto por el cliente si es
 válido, o uno generado) para correlacionar logs entre servicios.
+
+## Contrato
+
+`POST /validate` responde con status codes REST reales:
+
+| Situación | Status | Body |
+| --------- | ------ | ---- |
+| PDF válido | `200` | `{"valid": true, "error": null}` |
+| Extensión distinta de `.pdf` | `415` | `{"detail": "El archivo debe tener extensión .pdf"}` |
+| Excede `MAX_PDF_SIZE_BYTES` | `413` | `{"detail": "El archivo excede el tamaño máximo de ..."}` |
+| Archivo vacío o formato inválido | `400` | `{"detail": "..."}` |
+
+El detalle de cada caso, el cambio rompiente respecto del monolito y la guía
+para adaptar clientes están en [`docs/CONTRATO.md`](docs/CONTRATO.md).
 
 ## Variables de entorno
 

@@ -41,7 +41,7 @@ def test_validate_valid_pdf_returns_valid():
         files={"file": ("test.pdf", PDF_HEADER, "application/pdf")},
     )
     assert response.status_code == 200
-    assert response.json()["valid"] is True
+    assert response.json() == {"valid": True, "error": None}
 
 
 def test_validate_non_pdf_extension_returns_415():
@@ -50,6 +50,7 @@ def test_validate_non_pdf_extension_returns_415():
         files={"file": ("test.txt", b"not a pdf", "text/plain")},
     )
     assert response.status_code == 415
+    assert response.json()["detail"] == "El archivo debe tener extensión .pdf"
 
 
 def test_validate_non_pdf_bytes_returns_400():
@@ -58,7 +59,7 @@ def test_validate_non_pdf_bytes_returns_400():
         files={"file": ("test.pdf", b"not a pdf", "application/pdf")},
     )
     assert response.status_code == 400
-    assert "PDF" in response.json()["detail"]
+    assert response.json()["detail"] == "El archivo no tiene un formato PDF válido"
 
 
 def test_validate_empty_file_returns_400():
@@ -67,6 +68,7 @@ def test_validate_empty_file_returns_400():
         files={"file": ("empty.pdf", b"", "application/pdf")},
     )
     assert response.status_code == 400
+    assert response.json()["detail"] == "El archivo está vacío"
 
 
 def test_validate_oversized_pdf_returns_413(small_limit):
@@ -75,3 +77,4 @@ def test_validate_oversized_pdf_returns_413(small_limit):
         files={"file": ("big.pdf", PDF_HEADER + b"x" * 2048, "application/pdf")},
     )
     assert response.status_code == 413
+    assert response.json()["detail"] == "El archivo excede el tamaño máximo de 1024 bytes"
