@@ -1,7 +1,10 @@
+import sys
+
 import pytest
 from fastapi.testclient import TestClient
 from shared.web.logging import RequestIdMiddleware, TimingMiddleware
 
+import entrypoint
 from main import app
 from settings import Settings, get_settings
 
@@ -33,6 +36,23 @@ def test_timing_middleware_registered():
     registered = [entry.cls for entry in app.user_middleware]
     assert TimingMiddleware in registered
     assert registered.index(RequestIdMiddleware) < registered.index(TimingMiddleware)
+
+
+def test_entrypoint_uses_port_from_env(monkeypatch):
+    """`entrypoint.py` arma el argv de uvicorn con PORT (distroless no tiene shell)."""
+    captured = {}
+    monkeypatch.setenv("PORT", "9000")
+    monkeypatch.setattr(sys, "argv", ["pytest"])
+    monkeypatch.setattr(
+        entrypoint.runpy,
+        "run_module",
+        lambda name, run_name: captured.update(name=name, run_name=run_name),
+    )
+
+    entrypoint.main()
+
+    assert captured == {"name": "uvicorn", "run_name": "__main__"}
+    assert sys.argv[1:] == ["main:app", "--host", "0.0.0.0", "--port", "9000"]
 
 
 def test_validate_valid_pdf_returns_valid():
