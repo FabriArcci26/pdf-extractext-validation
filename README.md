@@ -13,7 +13,7 @@ bytes, así que un PDF que excede el límite se rechaza sin cargarse entero en R
 
 Las reglas de negocio no viven en este repo: se obtienen del paquete compartido
 [`pdf-extractext-shared`](https://github.com/videlalauti/pdf-extractext-shared),
-pinneado por tag (`v1.0.0`) en `requirements.txt`.
+pinneado por tag (`v1.3.0`) en `requirements.txt`.
 
 ## Endpoints
 
@@ -63,7 +63,7 @@ cp .env.example .env        # opcional: ajustar variables
 uvicorn main:app --host 0.0.0.0 --port "${PORT:-8000}"
 ```
 
-Requiere Python 3.14 (igual que la imagen del `Dockerfile`).
+Requiere Python 3.13 (igual que la imagen del `Dockerfile`).
 
 ### Docker
 
