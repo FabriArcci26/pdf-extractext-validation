@@ -77,9 +77,16 @@ docker build -t pdf-extractext-validation .
 docker run -p 8000:8000 -e CORS_ORIGINS=http://localhost pdf-extractext-validation
 ```
 
-La imagen arranca con `--port ${PORT:-8000}`, corre como usuario no-root y declara
-un `HEALTHCHECK` contra `/health`. La base está fijada por digest
-(`python:3.14-slim-bookworm@sha256:...`) para paridad dev/prod y builds reproducibles.
+Para escuchar en otro puerto, publicá el mismo puerto y pasá `PORT`:
+
+```bash
+docker run -p 9000:9000 -e PORT=9000 pdf-extractext-validation
+```
+
+La imagen se construye en 3 etapas con `uv` y usa un runtime distroless
+(Python 3.13), corre como usuario no-root (uid `65532`) y declara un
+`HEALTHCHECK` contra `/health`. `entrypoint.py` lee `PORT` del entorno al
+arrancar, porque distroless no tiene shell.
 
 ## Desarrollar
 
